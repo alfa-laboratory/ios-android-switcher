@@ -1,0 +1,40 @@
+@import url('figma-plugin-ds.css');
+
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#app {
+  width: 100%;
+  height: 100%;
+  padding: 10px 20px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+}
+
+.plugin {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  overflow: auto;
+  flex-direction: column;
+}
+
+.not-found {
+  margin-top: 10px;
+}
+
+.not-found span {
+  display: block;
+  margin-top: 4px;
+  font-size: 10px;
+}
+
+.error {
+  color: #f15045;
+  display: block;
+  margin: 10px auto;
+}

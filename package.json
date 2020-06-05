@@ -1,0 +1,32 @@
+{
+  "name": "ios-android-plugin",
+  "version": "1.0.0",
+  "description": "Супер-плагин для переключения макета между ios и android",
+  "license": "ISC",
+  "scripts": {
+    "build": "/usr/local/bin/node node_modules/.bin/webpack --mode=production",
+    "build:dev": "/usr/local/bin/node node_modules/.bin/webpack --mode=development",
+    "build:watch": "/usr/local/bin/node node_modules/.bin/webpack --mode=development --watch"
+  },
+  "dependencies": {
+    "axios": "^0.19.2",
+    "classnames": "^2.2.6",
+    "dotenv-webpack": "^1.7.0",
+    "react": "^16.8.6",
+    "react-dom": "^16.8.6"
+  },
+  "devDependencies": {
+    "@types/classnames": "^2.2.10",
+    "@types/react": "^16.8.24",
+    "@types/react-dom": "^16.8.5",
+    "css-loader": "^3.1.0",
+    "html-webpack-inline-source-plugin": "^0.0.10",
+    "html-webpack-plugin": "^3.2.0",
+    "style-loader": "^0.23.1",
+    "ts-loader": "^6.0.4",
+    "typescript": "^3.7.4",
+    "url-loader": "^2.1.0",
+    "webpack": "^4.41.4",
+    "webpack-cli": "^3.3.6"
+  }
+}
