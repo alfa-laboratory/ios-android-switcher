@@ -36,7 +36,7 @@ async function switchPlatform(node, pairs, components) {
   let error;
 
   try {
-    const platform = getFramePlatform(node);
+    const platform = getFramePlatform(node, components);
 
     switchLayoutSize(node, platform);
 
@@ -246,14 +246,38 @@ function cloneFrame(node: SceneNode): FrameNode {
   return clone;
 }
 
-function getFramePlatform(frame: FrameNode): PLATFORM {
-  if (frame.width === WIDTHS['IOS']) return 'IOS';
-  if (frame.width === WIDTHS['ANDROID']) return 'ANDROID';
+function getFramePlatform(frame: FrameNode, components): PLATFORM {
+  let IOSKeys = [];
+  let AndroidKeys = [];
+  Object.keys(components).forEach((name) => {
+    if (name.includes('IOS')) IOSKeys.push(components[name].key);
+    if (name.includes('ANDROID')) AndroidKeys.push(components[name].key);
+  });
+
+  let platform;
+  travel(frame, (node) => {
+    if (node.type === 'INSTANCE') {
+      if (IOSKeys.includes(node.masterComponent.key)) platform = 'IOS';
+      if (AndroidKeys.includes(node.masterComponent.key)) platform = 'ANDROID';
+      return false;
+    }
+  });
+
+  if (!platform) {
+    if ([414, 375].includes(frame.width)) platform = 'IOS';
+    if (frame.width === WIDTHS['ANDROID']) platform = 'ANDROID';
+  }
+
+  return platform;
 }
 
 function switchLayoutSize(frame: FrameNode, platform: PLATFORM) {
-  if (platform === 'IOS') frame.resize(WIDTHS['ANDROID'], HEIGHTS['ANDROID']);
-  if (platform === 'ANDROID') frame.resize(WIDTHS['IOS'], HEIGHTS['IOS']);
+  if (platform === 'IOS') {
+    frame.resize(WIDTHS['ANDROID'], frame.height === HEIGHTS['IOS'] ? HEIGHTS['ANDROID'] : frame.height);
+  }
+  if (platform === 'ANDROID') {
+    frame.resize(WIDTHS['IOS'], frame.height === HEIGHTS['ANDROID'] ? HEIGHTS['IOS'] : frame.height);
+  }
 }
 
 async function travel(root: SceneNode, callback: (node: SceneNode) => false | void) {
