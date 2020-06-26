@@ -165,7 +165,6 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
       meta.push({
         name: node.name,
         type: node.type,
-        position: getRelativePosition(node, component),
         overrides,
       });
     }
@@ -174,58 +173,26 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
   return meta;
 }
 
-function getRelativePosition(node: SceneNode, root: SceneNode) {
-  let x = node.x;
-  let y = node.y;
-  let curr = node as TextNode;
-  while (true) {
-    if (curr.parent !== root) {
-      curr = curr.parent as TextNode;
-      x += curr.x;
-      y += curr.y;
-    } else {
-      break;
-    }
-  }
-
-  return { x, y };
-}
-
-function distance(pos, pos2) {
-  return Math.sqrt(Math.pow(pos.x - pos2.x, 2) + Math.pow(pos.y - pos2.y, 2));
-}
-
-function findNearestComponent(pos, components) {
-  if (components.length === 0) return null;
-  return components.reduce((a, b) => (distance(pos, a.position) < distance(pos, b.position) ? a : b));
-}
-
 async function restoreMeta(component: InstanceNode, childrenMeta: ChildNodeMeta[]) {
   for (let node of component.findAll()) {
     if (childrenMeta.length === 0) break;
     if (!node.visible) continue;
 
-    const pos = getRelativePosition(node, component);
-    const nearest = findNearestComponent(
-      pos,
-      childrenMeta.filter((m) => m.type === node.type)
-    );
+    const matched = childrenMeta.find((child) => child.name === node.name);
 
-    if (!nearest) continue;
-
-    console.log(node, node.name, pos, nearest.position, nearest);
+    if (!matched) continue;
 
     try {
-      childrenMeta = childrenMeta.filter((node) => node !== nearest);
+      childrenMeta = childrenMeta.filter((node) => node !== matched);
 
-      if (node.type === 'TEXT' && nearest.overrides.characters) {
+      if (node.type === 'TEXT' && matched.overrides.characters) {
         await figma.loadFontAsync(node.fontName as FontName);
-        console.log(`Восстановлен текст для ${node.name}: ${nearest.overrides.characters}`);
+        console.log(`Восстановлен текст для ${node.name}: ${matched.overrides.characters}`);
       }
 
       if (node.type === 'TEXT') {
-        Object.keys(nearest.overrides).forEach((prop) => {
-          node[prop] = nearest.overrides[prop];
+        Object.keys(matched.overrides).forEach((prop) => {
+          node[prop] = matched.overrides[prop];
         });
       }
     } catch (e) {
