@@ -163,6 +163,7 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
 
     if (Object.keys(overrides).length > 0) {
       meta.push({
+        parentName: node.parent.name,
         name: node.name,
         type: node.type,
         overrides,
@@ -174,29 +175,35 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
 }
 
 async function restoreMeta(component: InstanceNode, childrenMeta: ChildNodeMeta[]) {
-  for (let node of component.findAll()) {
-    if (childrenMeta.length === 0) break;
-    if (!node.visible) continue;
-
-    const matched = childrenMeta.find((child) => child.name === node.name);
-
-    if (!matched) continue;
-
-    try {
-      childrenMeta = childrenMeta.filter((node) => node !== matched);
-
-      if (node.type === 'TEXT' && matched.overrides.characters) {
-        await figma.loadFontAsync(node.fontName as FontName);
-        console.log(`Восстановлен текст для ${node.name}: ${matched.overrides.characters}`);
-      }
+  for (let child of childrenMeta) {
+    for (let node of component.findAll()) {
+      if (!node.visible) continue;
 
       if (node.type === 'TEXT') {
-        Object.keys(matched.overrides).forEach((prop) => {
-          node[prop] = matched.overrides[prop];
-        });
+        if (child.name !== node.name) continue;
+
+        try {
+          if (child.overrides.characters) {
+            await figma.loadFontAsync(node.fontName as FontName);
+            console.log(`Восстановлен текст для ${node.name}: ${child.overrides.characters}`);
+          }
+
+          Object.keys(child.overrides).forEach((prop) => {
+            node[prop] = child.overrides[prop];
+          });
+        } catch (e) {
+          console.log(e);
+        }
       }
-    } catch (e) {
-      console.log(e);
+
+      if (node.type === 'INSTANCE') {
+        if (child.parentName === node.parent.name && child.overrides.masterComponent) {
+          setTimeout(() => {
+            // Странный баг с заменой
+            (node as InstanceNode).masterComponent = child.overrides.masterComponent;
+          });
+        }
+      }
     }
   }
 }

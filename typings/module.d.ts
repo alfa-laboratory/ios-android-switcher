@@ -9,9 +9,11 @@ type Position = {
 
 type ChildNodeMeta = {
   name: string;
+  parentName: string;
   type: string;
   position: Position;
   overrides: {
     [key: string]: string;
+    masterComponent?: ComponentNode;
   };
 };
