@@ -38,8 +38,6 @@ async function switchPlatform(node, pairs, components) {
   try {
     const platform = getFramePlatform(node, components);
 
-    switchLayoutSize(node, platform);
-
     await travelAsync(node, async (node) => {
       if (node.type === 'INSTANCE') {
         const replaced = await replaceInstance(node, platform, pairs, components);
@@ -65,6 +63,8 @@ async function switchPlatform(node, pairs, components) {
         console.log('-------');
       }
     });
+
+    switchLayoutSize(node, platform);
   } catch (e) {
     error = e.message;
   }
@@ -92,6 +92,13 @@ async function replaceInstance(node: InstanceNode, platform: PLATFORM, pairs, co
     const pairComponent = await figma.importComponentByKeyAsync(pair.key);
     const childrenMeta = parseChildrenMeta(node);
     console.log(parseChildrenMeta(node));
+
+    if (node.constraints.horizontal === 'CENTER' && node.x === 0) {
+      node.constraints = {
+        horizontal: 'MIN',
+        vertical: node.constraints.vertical,
+      };
+    }
 
     node.masterComponent = pairComponent;
 
