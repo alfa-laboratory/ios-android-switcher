@@ -153,10 +153,9 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
     });
 
     if (node.type === 'INSTANCE') {
-      const nodeInComponentMaster = findMasterChild(component.masterComponent, node);
       const nodeMaster = node.masterComponent;
       // Находим изменения в дочерних компонентах, например измененные иконки
-      if (nodeInComponentMaster && nodeMaster.id !== nodeInComponentMaster.masterComponent.id) {
+      if (nodeInComponentMaster && nodeMaster.id !== (nodeInComponentMaster as InstanceNode).masterComponent.id) {
         overrides.masterComponent = nodeMaster;
       }
     }
@@ -164,6 +163,7 @@ function parseChildrenMeta(component: InstanceNode): ChildNodeMeta[] {
     if (Object.keys(overrides).length > 0) {
       meta.push({
         parentName: node.parent.name,
+        masterName: nodeInComponentMaster.name,
         name: node.name,
         type: node.type,
         overrides,
@@ -180,7 +180,7 @@ async function restoreMeta(component: InstanceNode, childrenMeta: ChildNodeMeta[
       if (!node.visible) continue;
 
       if (node.type === 'TEXT') {
-        if (child.name !== node.name) continue;
+        if ([child.masterName, child.name].includes(node.name) === false) continue;
 
         try {
           if (child.overrides.characters) {

@@ -10,6 +10,7 @@ type Position = {
 type ChildNodeMeta = {
   name: string;
   parentName: string;
+  masterName: string;
   type: string;
   position: Position;
   overrides: {
