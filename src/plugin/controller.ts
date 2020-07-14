@@ -31,14 +31,14 @@ figma.ui.onmessage = async (msg: { type: MessageType; [key: string]: any }) => {
   }
 };
 
-async function switchPlatform(node, pairs, components) {
+async function switchPlatform(root: FrameNode, pairs, components) {
   const notFound = [];
   let error;
 
   try {
-    const platform = getFramePlatform(node, components);
+    const platform = getFramePlatform(root, components);
 
-    await travelAsync(node, async (node) => {
+    await travelAsync(root, async (node) => {
       if (node.type === 'INSTANCE') {
         const replaced = await replaceInstance(node, platform, pairs, components);
 
@@ -64,7 +64,13 @@ async function switchPlatform(node, pairs, components) {
       }
     });
 
-    switchLayoutSize(node, platform);
+    switchLayoutSize(root, platform);
+
+    await travelAsync(root, async (node) => {
+      if (node.height && node.width) {
+        node.resizeWithoutConstraints(Math.min(node.width, root.width), node.height);
+      }
+    });
   } catch (e) {
     error = e.message;
   }
