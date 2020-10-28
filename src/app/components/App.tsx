@@ -16,8 +16,7 @@ const App = ({}) => {
   const [loaded, setLoaded] = useState(false);
   const [pending, setPending] = useState(false);
   const [data, setData] = useState(null);
-  const [error, setError] = useState(null);
-  const [notFound, setNotFound] = useState([]);
+  const [results, setResults] = useState([]);
 
   useEffect(() => {
     axios.all([axios.get(PAIRS_URL), axios.get(COMPONENTS_URL)]).then(
@@ -44,35 +43,52 @@ const App = ({}) => {
 
       if (type === 'DONE') {
         setPending(false);
-        setError(message.error);
-        setNotFound(message.notFound);
+        setResults(message);
       }
     };
   }, []);
 
   const handleSwitchButtonClick = useCallback(() => {
-    postMessage({ type: 'SWITCH', data });
-    setError(null);
-    setNotFound([]);
+    setResults([]);
     setPending(true);
+    setTimeout(() => {
+      postMessage({ type: 'SWITCH', data });
+    }, 100);
   }, [data]);
 
+  const handleFocus = (nodeId: ComponentNode) => {
+    postMessage({ type: 'FOCUS', nodeId });
+  };
+
+  const renderResults = useCallback(() => {
+    const fails = results.filter((r) => r.result !== 'SUCCESS');
+    const success = results.filter((r) => r.result === 'SUCCESS');
+
+    return (
+      <div className="results">
+        <span className="section-title">Ошибки - {fails.length}</span>
+        {fails.map((item, i) => (
+          <a key={i} onClick={() => handleFocus(item.id)}>
+            {item.name} — {item.result}
+          </a>
+        ))}
+
+        <span className="section-title">Заменено - {success.length}</span>
+        {success.map((item, i) => (
+          <a key={i} onClick={() => handleFocus(item.id)}>
+            {item.name}
+          </a>
+        ))}
+      </div>
+    );
+  }, [results]);
   return (
     <div className="plugin">
       <Button onClick={handleSwitchButtonClick} disabled={!loaded || pending}>
         switch
       </Button>
 
-      {error && <span className="error">{error}</span>}
-
-      {notFound.length > 0 && (
-        <div className="not-found">
-          Не найдены пары
-          {notFound.map((name) => (
-            <span key={name}>{name}</span>
-          ))}
-        </div>
-      )}
+      {results.length > 0 && renderResults()}
     </div>
   );
 };

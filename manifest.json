@@ -1,6 +1,6 @@
 {
   "name": "IOS Android switcher",
-  "id": "851010507827385102",
+  "id": "880764891637738493",
   "api": "1.0.0",
   "main": "dist/code.js",
   "ui": "dist/ui.html"

@@ -23,18 +23,24 @@ html {
   flex-direction: column;
 }
 
-.not-found {
+.results {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.results a {
+  cursor: pointer;
+  border-bottom: 1px dashed rgba(11, 31, 53, 0.3);
+  margin-bottom: 8px;
+}
+
+.results a:hover {
+  border-color: rgba(11, 31, 53, 0.6);
+}
+
+.section-title {
+  font-size: 14px;
   margin-top: 10px;
-}
-
-.not-found span {
-  display: block;
-  margin-top: 4px;
-  font-size: 10px;
-}
-
-.error {
-  color: #f15045;
-  display: block;
-  margin: 10px auto;
+  padding-left: 0;
 }
