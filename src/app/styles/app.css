@@ -44,3 +44,7 @@ html {
   margin-top: 10px;
   padding-left: 0;
 }
+
+.plugin h1 {
+  margin: 0;
+}

@@ -1,5 +1,4 @@
-const STOP_NODE_TYPES = ['BOOLEAN_OPERATION', 'RECTANGLE'];
-const PRESERVED_PROPERTIES = ['characters', 'textStyleId', 'fillStyleId'];
+import { travel, travelAsync } from './utils';
 
 const WIDTHS = {
   ANDROID: 360,
@@ -38,10 +37,6 @@ export class Switcher {
 
       results.push(await this.switchInstance(node));
 
-      await new Promise((resolve) => {
-        setTimeout(resolve, 100);
-      });
-
       return false;
     });
 
@@ -65,148 +60,21 @@ export class Switcher {
       };
     }
 
-    const pairComponent = await figma.importComponentByKeyAsync(pair.key);
-
-    instance.masterComponent = pairComponent;
-
-    // const changes = this.getChanges(instance, instance.masterComponent);
-
-    // console.log(changes);
-
-    // const instanceStructure = JSON.stringify(this.getComponentStructure(instance));
-    // const pairStructure = JSON.stringify(this.getComponentStructure(pairComponent));
-
-    // if (instanceStructure === pairStructure) {
-    //   instance.masterComponent = pairComponent;
-    //   await new Promise((resolve) => {
-    //     setTimeout(() => {
-    //       this.restoreChanges(instance, changes);
-    //       resolve();
-    //     }, 100);
-    //   });
-
-    //   return {
-    //     id: instance.id,
-    //     name: instance.name,
-    //     result: 'SUCCESS',
-    //   };
-    // } else {
-    //   console.error('Структуры компонентов различаются', {
-    //     instanceStructure,
-    //     pairStructure,
-    //   });
-
-    //   return {
-    //     id: instance.id,
-    //     name: instance.name,
-    //     result: 'DIFFERENT_STRUCTURES',
-    //   };
-    // }
-  }
-
-  private getComponentStructure(component: InstanceNode | ComponentNode) {
-    const maxDepth = 3;
-
-    const travel = (node, depth = 0) => {
-      const nodeStructure = [node.type];
-
-      if (depth < maxDepth) {
-        if ('children' in node && node.children.length) {
-          const children = [];
-
-          node.children.forEach((child) => {
-            children.push(travel(child, depth + 1));
-          });
-
-          nodeStructure.push(children);
-        }
-      }
-
-      return nodeStructure;
-    };
-
-    return travel(component)[1];
-  }
-
-  private getChanges(instance: InstanceNode, master: ComponentNode): Array<[string, any]> {
-    const props = [
-      'layoutAlign',
-      'fillStyleId',
-      'fills',
-      'textStyleId',
-      'stokeStyleId',
-      'characters',
-      'visible',
-      'width',
-      'height',
-    ];
-
-    const maxDepth = 3;
-
-    const travel = (instanceChild, masterChild, depth = 0) => {
-      let nodeChanges = {};
-
-      props.forEach((prop) => {
-        const instanceProp = JSON.stringify(instanceChild[prop]);
-        const masterProp = JSON.stringify(masterChild[prop]);
-
-        if (instanceProp !== masterProp) {
-          nodeChanges[prop] = JSON.parse(instanceProp);
-        }
-      });
-
-      const result = [instanceChild.name, nodeChanges];
-
-      if (depth < maxDepth) {
-        if ('children' in instanceChild && instanceChild.children.length) {
-          const children = [];
-
-          instanceChild.children.forEach((child, i) => {
-            children.push(travel(child, masterChild.children[i], depth + 1));
-          });
-
-          result.push(children);
-        }
-      }
-
-      return result;
-    };
-
-    return travel(instance, master);
-  }
-
-  private restoreChanges(node: InstanceNode, changes: Array<[string, any]>) {
-    const applyProps = (node, props) => {
-      Object.entries(props).forEach(([prop, value]) => {
-        if (prop === 'characters') {
-          figma.loadFontAsync(node.fontName as FontName).then(() => {
-            node[prop] = value;
-          });
-        } else if (prop === 'width') {
-          node.resize(value, node.height);
-        } else if (prop === 'height') {
-          node.resize(node.width, value);
-        } else {
-          node[prop] = value;
-        }
-      });
-    };
-
-    const travel = (node, nodeChanges) => {
-      try {
-        applyProps(node, nodeChanges[1]);
-
-        if (nodeChanges[2] && 'children' in node && node.children.length) {
-          node.children.forEach((child, i) => {
-            travel(child, nodeChanges[2][i]);
-          });
-        }
-      } catch (e) {
-        console.log(e, node.name, nodeChanges);
-      }
-    };
-
-    travel(node, changes);
+    try {
+      const pairComponent = await figma.importComponentByKeyAsync(pair.key);
+      instance.masterComponent = pairComponent;
+      return {
+        id: instance.id,
+        name: instance.name,
+        result: 'SUCCESS',
+      };
+    } catch (e) {
+      return {
+        id: instance.id,
+        name: instance.name,
+        result: 'IMPORT_ERROR',
+      };
+    }
   }
 
   /**
@@ -215,6 +83,21 @@ export class Switcher {
   private cloneFrame(frame: FrameNode): FrameNode {
     const clone = frame.clone();
     clone.x += clone.width + 20;
+
+    // TODO: написать нормально
+    if (this.platform === 'IOS') {
+      if (/\bios\b/i.test(clone.name)) {
+        clone.name = clone.name.replace(/\bios\b/i, 'ANDROID');
+      } else {
+        clone.name = `ANDROID | ${clone.name}`;
+      }
+    } else {
+      if (/\bandroid\b/i.test(clone.name)) {
+        clone.name = clone.name.replace(/\bandroid\b/i, 'IOS');
+      } else {
+        clone.name = `IOS | ${clone.name}`;
+      }
+    }
 
     return clone;
   }
@@ -269,27 +152,5 @@ export class Switcher {
     }
 
     return platform;
-  }
-}
-
-function travel(root: SceneNode, callback: (node: SceneNode) => false | void) {
-  const callbackResult = callback(root);
-
-  const stopTravel = callbackResult === false || STOP_NODE_TYPES.some((type) => root.type === type);
-
-  if (!stopTravel && 'children' in root) {
-    root.children.forEach((child) => travel(child, callback));
-  }
-}
-
-async function travelAsync(root: SceneNode, callback: (node: SceneNode) => Promise<false | void>) {
-  const callbackResult = await callback(root);
-
-  const stopTravel = callbackResult === false || STOP_NODE_TYPES.some((type) => root.type === type);
-
-  if (!stopTravel && 'children' in root) {
-    for (let child of root.children) {
-      await travelAsync(child, callback);
-    }
   }
 }

@@ -1,8 +1,9 @@
+import { Restorer } from './Restorer';
 import { Switcher } from './Switcher';
 
 figma.showUI(__html__, {
-  width: 480,
-  height: 300,
+  width: 440,
+  height: 400,
 });
 
 figma.ui.onmessage = async (msg: { type: MessageType; [key: string]: any }) => {
@@ -15,10 +16,30 @@ figma.ui.onmessage = async (msg: { type: MessageType; [key: string]: any }) => {
     case 'FOCUS':
       focusNode(msg.nodeId);
       break;
+    case 'RESTORE':
+      restoreChanges();
+      break;
     default:
       break;
   }
 };
+
+let twoLastSelected = [];
+let prevSelection = [];
+
+figma.on('selectionchange', () => {
+  const currSelection = figma.currentPage.selection;
+  const diff = currSelection.filter((node) => !prevSelection.find((oldNode) => oldNode.id === node.id));
+
+  prevSelection = [...currSelection];
+
+  if (diff.length) {
+    twoLastSelected.push(diff[0]);
+    if (twoLastSelected.length > 2) {
+      twoLastSelected.shift();
+    }
+  }
+});
 
 async function switchComponents(pairs, components) {
   const frame = figma.currentPage.selection[0];
@@ -43,4 +64,15 @@ function focusNode(nodeId: string) {
 
   figma.viewport.scrollAndZoomIntoView([node]);
   figma.currentPage.selection = [node as InstanceNode];
+}
+
+function restoreChanges() {
+  if (twoLastSelected.length === 2) {
+    try {
+      const restorer = new Restorer(twoLastSelected[0] as InstanceNode, twoLastSelected[1] as InstanceNode);
+      restorer.restore();
+    } catch (e) {
+      console.error(e);
+    }
+  }
 }

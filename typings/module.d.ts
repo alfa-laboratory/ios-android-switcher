@@ -1,6 +1,6 @@
 type PLATFORM = 'IOS' | 'ANDROID';
 
-type MessageType = 'SWITCH' | 'FOCUS' | 'NOT_FOUND' | 'DONE';
+type MessageType = 'SWITCH' | 'FOCUS' | 'NOT_FOUND' | 'DONE' | 'RESTORE';
 
 type Position = {
   x: number;

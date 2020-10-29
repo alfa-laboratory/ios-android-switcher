@@ -56,6 +56,10 @@ const App = ({}) => {
     }, 100);
   }, [data]);
 
+  const handleRestoreButtonClick = useCallback(() => {
+    postMessage({ type: 'RESTORE' });
+  }, []);
+
   const handleFocus = (nodeId: ComponentNode) => {
     postMessage({ type: 'FOCUS', nodeId });
   };
@@ -84,9 +88,27 @@ const App = ({}) => {
   }, [results]);
   return (
     <div className="plugin">
+      <h1>UI/UX от бога 🙈</h1>
+
+      <p>Выдели фрейм, который хочешь поменять</p>
+
       <Button onClick={handleSwitchButtonClick} disabled={!loaded || pending}>
-        switch
+        Заменить на парный
       </Button>
+
+      <p>
+        Выдели сначала новый КОМПОНЕНТ (не фрейм), потом нажми command+shift и выдели старый компонент. Если звезды
+        сойдутся, то изменения применятся на замененный компонент.
+      </p>
+
+      <Button onClick={handleRestoreButtonClick} disabled={!loaded || pending}>
+        Попробовать накатить изменения
+      </Button>
+
+      <p>
+        Если что-то не работает, открой консоль (Plugins {'->'} Development {'->'} Open Console), запусти плагин еще раз
+        и <a href="https://t.me/reme3d2y">скинь скриншот</a>
+      </p>
 
       {results.length > 0 && renderResults()}
     </div>
