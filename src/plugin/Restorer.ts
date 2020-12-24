@@ -16,7 +16,7 @@ export class Restorer {
 
         props.forEach((prop) => {
           const instanceProp = JSON.stringify(refChild[prop]);
-          const masterProp = JSON.stringify(refMasterChild[prop]);
+          const masterProp = JSON.stringify((refMasterChild || {})[prop]);
 
           if (instanceProp !== masterProp) {
             nodeChanges[prop] = JSON.parse(instanceProp);
@@ -34,7 +34,7 @@ export class Restorer {
           refChild.children.forEach((child, i) => {
             travel(
               child as any,
-              (refMasterChild as any).children[i],
+              refMasterChild ? (refMasterChild as any).children[i] : null,
               structuresEqual ? (nodeChild as any).children[i] : null
             );
           });

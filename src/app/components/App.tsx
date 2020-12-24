@@ -2,11 +2,12 @@ import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import Button from './Button';
 
+
 import '../styles/app.css';
 
 const REPO_URL = 'https://raw.githubusercontent.com/alfa-laboratory/figma-mobile-components/master';
-const PAIRS_URL = `${REPO_URL}/data/pairs.json`;
 const COMPONENTS_URL = `${REPO_URL}/data/components.json`;
+const PAIRS_URL = 'https://digital.alfabank.ru/figma-pairs/pairs';
 
 const postMessage = (payload: { type: MessageType; [key: string]: any }) => {
   parent.postMessage({ pluginMessage: payload }, '*');
@@ -21,11 +22,22 @@ const App = ({}) => {
   useEffect(() => {
     axios.all([axios.get(PAIRS_URL), axios.get(COMPONENTS_URL)]).then(
       axios.spread((pairsResponse, componentsResponse) => {
-        const components = componentsResponse.data;
-        const pairs = Object.keys(pairsResponse.data).reduce((acc, key) => {
-          acc[pairsResponse.data[key]] = key;
+        const components = {};
+
+        const componentsMap = componentsResponse.data.reduce((acc, c) => {
+          const name = `${c.platform}|${c.name}`;
+          acc[c.key] = name;
+          components[name] = c;
           return acc;
-        }, pairsResponse.data);
+        }, {});
+
+        const pairs = pairsResponse.data.reduce((acc, pair) => {
+          const [key1, key2] = pair;
+
+          acc[componentsMap[key1]] = componentsMap[key2];
+          acc[componentsMap[key2]] = componentsMap[key1];
+          return acc;
+        }, {});
 
         setLoaded(true);
 
@@ -107,7 +119,7 @@ const App = ({}) => {
 
       <p>
         Если что-то не работает, открой консоль (Plugins {'->'} Development {'->'} Open Console), запусти плагин еще раз
-        и <a href="https://t.me/reme3d2y">скинь скриншот</a>
+        и скинь скриншот @reme3d2y
       </p>
 
       {results.length > 0 && renderResults()}
