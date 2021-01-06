@@ -9,7 +9,7 @@
     "build:watch": "/usr/local/bin/node node_modules/.bin/webpack --mode=development --watch"
   },
   "dependencies": {
-    "axios": "^0.19.2",
+    "axios": "^0.21.1",
     "classnames": "^2.2.6",
     "dotenv-webpack": "^1.7.0",
     "react": "^16.8.6",
