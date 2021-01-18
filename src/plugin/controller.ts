@@ -1,4 +1,4 @@
-import { Restorer } from './Restorer';
+import { Restorer, RestorerOptions } from './Restorer';
 import { Switcher } from './Switcher';
 
 figma.showUI(__html__, {
@@ -17,7 +17,7 @@ figma.ui.onmessage = async (msg: { type: MessageType; [key: string]: any }) => {
       focusNode(msg.nodeId);
       break;
     case 'RESTORE':
-      restoreChanges();
+      restoreChanges(msg.options);
       break;
     default:
       break;
@@ -66,10 +66,10 @@ function focusNode(nodeId: string) {
   figma.currentPage.selection = [node as InstanceNode];
 }
 
-function restoreChanges() {
+function restoreChanges(options?: RestorerOptions) {
   if (twoLastSelected.length === 2) {
     try {
-      const restorer = new Restorer(twoLastSelected[0] as InstanceNode, twoLastSelected[1] as InstanceNode);
+      const restorer = new Restorer(twoLastSelected[0] as InstanceNode, twoLastSelected[1] as InstanceNode, options);
       restorer.restore();
     } catch (e) {
       console.error(e);

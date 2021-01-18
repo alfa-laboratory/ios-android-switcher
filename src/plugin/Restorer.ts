@@ -1,10 +1,34 @@
 import { travel } from './utils';
 
+export const restoreProps = [
+  'layoutAlign',
+  'fillStyleId',
+  'fills',
+  'textStyleId',
+  'stokeStyleId',
+  'characters',
+  'visible',
+] as const;
+
+export type RestoreProp = typeof restoreProps[number];
+
+export type RestorerOptions = {
+  props: Array<RestoreProp>;
+};
+
 export class Restorer {
-  constructor(public node: InstanceNode, public reference: InstanceNode) {}
+  constructor(
+    public node: InstanceNode,
+    public reference: InstanceNode,
+    public options: RestorerOptions = {
+      props: [...restoreProps],
+    }
+  ) {
+    console.log(options);
+  }
 
   restore() {
-    const props = ['layoutAlign', 'fillStyleId', 'fills', 'textStyleId', 'stokeStyleId', 'characters', 'visible'];
+    console.log(this.options);
 
     const structuresEqual = this.compareStructures(this.node, this.reference);
 
@@ -14,7 +38,7 @@ export class Restorer {
       const travel = (refChild: ComponentNode, refMasterChild: ComponentNode, nodeChild: ComponentNode = null) => {
         let nodeChanges = {};
 
-        props.forEach((prop) => {
+        this.options.props.forEach((prop) => {
           const instanceProp = JSON.stringify(refChild[prop]);
           const masterProp = JSON.stringify((refMasterChild || {})[prop]);
 
@@ -79,7 +103,7 @@ export class Restorer {
           return;
         }
 
-        props.forEach((prop) => {
+        this.options.props.forEach((prop) => {
           const instanceProp = JSON.stringify(refChild[prop]);
           const masterProp = JSON.stringify(refMasterChild[prop]);
 

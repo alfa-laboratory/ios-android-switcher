@@ -2,8 +2,8 @@ import React, { useCallback, useState, useEffect } from 'react';
 import axios from 'axios';
 import Button from './Button';
 
-
 import '../styles/app.css';
+import { RestoreProp, restoreProps, RestorerOptions } from '../../plugin/Restorer';
 
 const REPO_URL = 'https://raw.githubusercontent.com/alfa-laboratory/figma-mobile-components/master';
 const COMPONENTS_URL = `${REPO_URL}/data/components.json`;
@@ -18,6 +18,9 @@ const App = ({}) => {
   const [pending, setPending] = useState(false);
   const [data, setData] = useState(null);
   const [results, setResults] = useState([]);
+  const [restoreOptions, setRestoreOptions] = useState<RestorerOptions>({
+    props: ['fills', 'characters'],
+  });
 
   useEffect(() => {
     axios.all([axios.get(PAIRS_URL), axios.get(COMPONENTS_URL)]).then(
@@ -68,9 +71,16 @@ const App = ({}) => {
     }, 100);
   }, [data]);
 
-  const handleRestoreButtonClick = useCallback(() => {
-    postMessage({ type: 'RESTORE' });
-  }, []);
+  const handleRestoreButtonClick = () => {
+    postMessage({ type: 'RESTORE', options: restoreOptions });
+  };
+
+  const handleRestorePropsChange = (prop: RestoreProp, checked: boolean) => {
+    setRestoreOptions({
+      ...restoreOptions,
+      props: checked ? restoreOptions.props.filter((p) => p !== prop) : [...restoreOptions.props, prop],
+    });
+  };
 
   const handleFocus = (nodeId: ComponentNode) => {
     postMessage({ type: 'FOCUS', nodeId });
@@ -108,10 +118,24 @@ const App = ({}) => {
         Заменить на парный
       </Button>
 
+      <hr />
+
       <p>
         Выдели сначала новый КОМПОНЕНТ (не фрейм), потом нажми command+shift и выдели старый компонент. Если звезды
         сойдутся, то изменения применятся на замененный компонент.
       </p>
+
+      <div className="restore-props">
+        {restoreProps.map((prop) => {
+          const checked = restoreOptions.props.includes(prop);
+          return (
+            <label key={prop}>
+              <input type="checkbox" checked={checked} onChange={() => handleRestorePropsChange(prop, checked)} />
+              {prop}
+            </label>
+          );
+        })}
+      </div>
 
       <Button onClick={handleRestoreButtonClick} disabled={!loaded || pending}>
         Попробовать накатить изменения

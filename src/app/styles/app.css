@@ -48,3 +48,8 @@ html {
 .plugin h1 {
   margin: 0;
 }
+
+.restore-props {
+  display: flex;
+  flex-wrap: wrap;
+}
